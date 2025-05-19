@@ -2,9 +2,9 @@
   "name": "koa",
   "version": "1.0.0",
   "main": "index.ts",
-  "scripts": {
-    "start-server": "tsx ./index.ts"
-  },
+"scripts": {
+  "start-server": "ts-node index.ts"
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/edetp-MCE/bvd-103-assignment-1-template.git"
