@@ -1,14 +1,15 @@
 import Koa from "koa";
 import Router from "@koa/router";
 import bodyParser from "koa-bodyparser";
+import { MongoClient } from "mongodb";
 import {
-  connectDB,
+  setBooksDB,
   getBooks,
   addBook,
   updateBook,
   deleteBook,
   Book,
-} from "./assignment-3";
+} from "./assignment-4";
 
 const app = new Koa();
 const router = new Router();
@@ -20,7 +21,7 @@ const initialBooks: Book[] = [
   { title: "Brave New World", author: "Aldous Huxley", genre: "Dystopian" },
 ];
 
-async function seedBooks(): Promise<void> {
+async function seedBooks() {
   const existingBooks = await getBooks();
   if (existingBooks.length === 0) {
     for (const book of initialBooks) {
@@ -30,21 +31,21 @@ async function seedBooks(): Promise<void> {
   }
 }
 
-// GET with filters
+// GET /books
 router.get("/books", async (ctx) => {
   const { genre, author, title } = ctx.query;
 
-  const filter = {
+  const filters = {
     ...(genre ? { genre: genre.toString() } : {}),
     ...(author ? { author: author.toString() } : {}),
     ...(title ? { title: title.toString() } : {}),
   };
 
-  const books = await getBooks(filter);
+  const books = await getBooks(filters);
   ctx.body = books;
 });
 
-// POST
+// POST /books
 router.post("/books", async (ctx) => {
   const { title, author, genre } = ctx.request.body as Partial<Book>;
 
@@ -54,25 +55,25 @@ router.post("/books", async (ctx) => {
     return;
   }
 
-  const book = await addBook({ title, author, genre });
+  const newBook = await addBook({ title, author, genre });
   ctx.status = 201;
-  ctx.body = book;
+  ctx.body = newBook;
 });
 
-// PUT
+// PUT /books/:id
 router.put("/books/:id", async (ctx) => {
   const { id } = ctx.params;
-  const { title, author, genre } = ctx.request.body as Partial<Book>;
+  const updates = ctx.request.body as Partial<Book>;
 
-  if (!title && !author && !genre) {
+  if (!updates.title && !updates.author && !updates.genre) {
     ctx.status = 400;
     ctx.body = { error: "No valid fields to update" };
     return;
   }
 
   try {
-    const success = await updateBook(id, { title, author, genre });
-    if (!success) {
+    const updated = await updateBook(id, updates);
+    if (!updated) {
       ctx.status = 404;
       ctx.body = { error: "Book not found" };
     } else {
@@ -85,12 +86,12 @@ router.put("/books/:id", async (ctx) => {
   }
 });
 
-// DELETE
+// DELETE /books/:id
 router.delete("/books/:id", async (ctx) => {
   const { id } = ctx.params;
   try {
-    const success = await deleteBook(id);
-    if (!success) {
+    const deleted = await deleteBook(id);
+    if (!deleted) {
       ctx.status = 404;
       ctx.body = { error: "Book not found" };
     } else {
@@ -107,15 +108,22 @@ app.use(bodyParser());
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-/* Start the server */
-connectDB()
-  .then(async () => {
+async function startServer() {
+  try {
+    const client = new MongoClient("mongodb://localhost:27017");
+    await client.connect();
+    setBooksDB(client.db("booksdb"));
+
     await seedBooks();
-    const PORT = 3000;
+    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-      console.log(`McMasterful Books API running at http://localhost:${PORT}`);
+      console.log(`Server running at http://localhost:${PORT}`);
     });
-  })
-  .catch((err) => {
-    console.error("Failed to connect to MongoDB:", err);
-  });
+  } catch (err) {
+    console.error("Failed to start server:", err);
+  }
+}
+
+startServer();
+
+export default app;
