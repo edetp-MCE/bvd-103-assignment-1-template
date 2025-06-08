@@ -1,22 +1,32 @@
+import js from "@eslint/js";
+import parserTs from "@typescript-eslint/parser";
+import pluginTs from "@typescript-eslint/eslint-plugin";
 
-const js = require("@eslint/js");
-const globals = require("globals");
-
-module.exports = {
-  root: true,
-  env: {
-    node: true,
-    es2022: true,
+export default [
+  js.configs.recommended,
+  {
+    files: ["**/*.ts"],
+    languageOptions: {
+      parser: parserTs,
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
+      globals: {
+        process: "readonly",
+        __dirname: "readonly",
+        module: "readonly",
+        require: "readonly",
+      },
+    },
+    plugins: {
+      "@typescript-eslint": pluginTs,
+    },
+    rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["warn"],
+      "semi": ["error", "always"],
+      "quotes": ["error", "double"],
+    },
   },
-  parserOptions: {
-    ecmaVersion: 2022,
-    sourceType: "module",
-  },
-  extends: [js.configs.recommended],
-  globals: {
-    ...globals.node,
-  },
-  rules: {
-  
-  },
-};
+];
