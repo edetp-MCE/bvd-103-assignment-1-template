@@ -5,12 +5,10 @@
   "main": "index.ts",
   "scripts": {
     "start-server": "ts-node index.ts",
-    "dev": "nodemon index.ts",
-    "lint": "eslint . --ext .ts --config eslint.config.js",
+    "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
-  },
+    "typecheck": "tsc --noEmit"
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/edetp-MCE/bvd-103-assignment-1-template.git"
