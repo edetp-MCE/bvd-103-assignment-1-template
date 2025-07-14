@@ -25,6 +25,17 @@ services:
     volumes:
       - mongo_data:/data/db
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"     # For backend messaging
+      - "15672:15672"   # RabbitMQ web UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
   server1:
     image: node:20
     working_dir: /app
@@ -33,6 +44,7 @@ services:
     command: npx -y tsx ./index.ts
     depends_on:
       - mongo
+      - rabbitmq
 
   server2:
     image: node:20
@@ -42,6 +54,7 @@ services:
     command: npx -y tsx ./index.ts
     depends_on:
       - mongo
+      - rabbitmq
 
   server3:
     image: node:20
@@ -51,6 +64,8 @@ services:
     command: npx -y tsx ./index.ts
     depends_on:
       - mongo
+      - rabbitmq
 
 volumes:
   mongo_data:
+  rabbitmq_data:
