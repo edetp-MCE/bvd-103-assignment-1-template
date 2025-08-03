@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - listings
+      - warehouse
+      - orders
+      - api-docs
+
+  mongo:
+    image: mongo:5
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  listings:
+    image: ghcr.io/YOUR_GH_USERNAME/listings:latest
+    environment:
+      - PORT=3001
+      - MONGO_URL=mongodb://mongo:27017/listings
+      - RABBIT_URL=amqp://rabbitmq
+
+  warehouse:
+    image: ghcr.io/YOUR_GH_USERNAME/warehouse:latest
+    environment:
+      - PORT=3002
+      - MONGO_URL=mongodb://mongo:27017/warehouse
+      - RABBIT_URL=amqp://rabbitmq
+
+  orders:
+    image: ghcr.io/YOUR_GH_USERNAME/orders:latest
+    environment:
+      - PORT=3003
+      - MONGO_URL=mongodb://mongo:27017/orders
+      - RABBIT_URL=amqp://rabbitmq
+
+  api-docs:
+    image: ghcr.io/YOUR_GH_USERNAME/api-docs:latest
+    ports:
+      - "9090:80"
+
+volumes:
+  mongo_data:
